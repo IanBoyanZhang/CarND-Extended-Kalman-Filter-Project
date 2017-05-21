@@ -37,16 +37,24 @@ FusionEKF::FusionEKF() {
     * Set the process and measurement noises
   */
 //  Idea: Going through data to calculate process and measurement noises?
-    H_laser_(0, 0) = 1;
-    H_laser_(1, 1) = 1;
+  H_laser_(0, 0) = 1;
+  H_laser_(1, 1) = 1;
 
-    Hj_
+  Hj_ = tools.CalculateJacobian(ekf_.x_);
 }
 
 /**
 * Destructor.
 */
 FusionEKF::~FusionEKF() {}
+/*
+ * TODO: Google style guide type conversion?
+ * long long or time_t?
+ */
+// Compute the time elapsed between the current and previous measurement
+float_t FusionEKF::GetTimeDiff(long long curr_time, long long prev_time) {
+  return (float_t)(curr_time - prev_time)/1000000.0;
+}
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
@@ -82,6 +90,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     return;
   }
 
+  float_t GetTimeDiff(measurement_pack.timestamp_, previous_timestamp_);
+  previous_timestamp_ = measurement_pack.timestamp_;
   /*****************************************************************************
    *  Prediction
    ****************************************************************************/

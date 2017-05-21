@@ -31,6 +31,7 @@ public:
   */
   KalmanFilter ekf_;
 
+
 private:
   // check whether the tracking toolbox was initiallized or not (first measurement)
   bool is_initialized_;
@@ -44,6 +45,7 @@ private:
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
+  float_t GetTimeDiff(long long curr_time, long long prev_time);
 };
 
 #endif /* FusionEKF_H_ */
