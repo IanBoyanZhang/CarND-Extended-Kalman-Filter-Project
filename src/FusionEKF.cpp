@@ -36,8 +36,11 @@ FusionEKF::FusionEKF() {
     * Finish initializing the FusionEKF.
     * Set the process and measurement noises
   */
+//  Idea: Going through data to calculate process and measurement noises?
+    H_laser_(0, 0) = 1;
+    H_laser_(1, 1) = 1;
 
-
+    Hj_
 }
 
 /**
