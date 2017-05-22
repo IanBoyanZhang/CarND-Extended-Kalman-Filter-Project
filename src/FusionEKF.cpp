@@ -41,8 +41,6 @@ FusionEKF::FusionEKF() {
 //  Idea: Going through data to calculate process and measurement noises?
   H_laser_(0, 0) = 1;
   H_laser_(1, 1) = 1;
-
-  Hj_ = tools.CalculateJacobian(ekf_.x_);
 }
 
 /**
@@ -83,6 +81,11 @@ MatrixXd ConstructQ(float_t dt) {
   return Q;
 }
 
+/**
+ *
+ * @param measurement_pack
+ * @return
+ */
 VectorXd Polar2Cart(const MeasurementPackage &measurement_pack) {
   float_t ro = measurement_pack.raw_measurements_[0];
   float_t theta = measurement_pack.raw_measurements_[1];
@@ -97,6 +100,19 @@ VectorXd Polar2Cart(const MeasurementPackage &measurement_pack) {
   radar_cart_x << px, py, vx, vy;
   return radar_cart_x;
 }
+
+bool isRadar(const MeasurementPackage &measurement_pack) {
+  return measurement_pack.sensor_type_ == MeasurementPackage::RADAR;
+}
+
+bool isLaser(const MeasurementPackage &measurement_pack) {
+  return measurement_pack.sensor_type_ == MeasurementPackage::LASER;
+}
+
+/**
+ * TODO: Refactor code to separate LIDAR and RADAR data
+ * @param measurement_pack
+ */
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
@@ -176,12 +192,16 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     return;
   }
 
+ /*****************************************************************************
+   *  Parameter preparation
+   ****************************************************************************/
   float_t dt = GetTimeDiff(measurement_pack.timestamp_, previous_timestamp_);
   previous_timestamp_ = measurement_pack.timestamp_;
 
   ekf_.F_(0, 2) = dt;
   ekf_.F_(1, 3) = dt;
   ekf_.Q_ = ConstructQ(dt);
+
   /*****************************************************************************
    *  Prediction
    ****************************************************************************/

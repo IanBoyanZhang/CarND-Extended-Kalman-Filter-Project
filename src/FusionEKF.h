@@ -51,6 +51,9 @@ private:
   float_t GetTimeDiff(long long curr_time, long long prev_time);
   Eigen::MatrixXd ConstructQ(float_t dt);
   Eigen::VectorXd Polar2Cart(const MeasurementPackage &measurement_pack);
+
+  bool isRadar(const MeasurementPackage &measurement_pack);
+  bool isLaser(const MeasurementPackage &measurement_pack);
 };
 
 #endif /* FusionEKF_H_ */
