@@ -48,6 +48,9 @@ private:
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
 
+  Eigen::MatrixXd R_;
+  Eigen::MatrixXd H_;
+
   float_t GetTimeDiff(long long curr_time, long long prev_time);
   Eigen::MatrixXd ConstructQ(float_t dt);
   Eigen::VectorXd Polar2Cart(const MeasurementPackage &measurement_pack);

@@ -137,7 +137,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                0, 0, 0, 1;
     // State covariance matrix
     ekf_.P_ = MatrixXd(4, 4);
-    ekf_.P_ = 1, 0, 0, 0,
+    ekf_.P_ << 1, 0, 0, 0,
               0, 1, 0, 0,
               0, 0, 1000, 0,
               0, 0, 0, 1000;
@@ -207,7 +207,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    ****************************************************************************/
 
   /**
-   TODO:
      * Update the state transition matrix F according to the new elapsed time.
       - Time is measured in seconds.
      * Update the process noise covariance matrix.
@@ -221,16 +220,21 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    ****************************************************************************/
 
   /**
-   TODO:
      * Use the sensor type to perform the update step.
      * Update the state and covariance matrices.
    */
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
+    H_ = tools.CalculateJacobian(ekf_.x_);
+    R_ = R_radar_;
   } else {
     // Laser updates
+    H_ = H_laser_;
+    R_ = R_laser_;
   }
+
+  ekf_.Update(meas_cart);
 
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;

@@ -14,6 +14,9 @@ public:
   // state transistion matrix
   Eigen::MatrixXd F_;
 
+  // state transistion matrix transpose for reusing calc result
+  Eigen::MatrixXd Ft;
+
   // process covariance matrix
   Eigen::MatrixXd Q_;
 
