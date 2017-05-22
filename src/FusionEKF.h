@@ -33,8 +33,10 @@ public:
 
 
 private:
-  // check whether the tracking toolbox was initiallized or not (first measurement)
-  bool is_initialized_;
+  // check whether the tracking toolbox was initialized or not (first measurement)
+  bool pos_is_initialized_;
+  bool velo_is_initialized_;
+  bool is_setup;
 
   // previous timestamp
   long long previous_timestamp_;
@@ -45,7 +47,10 @@ private:
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
+
   float_t GetTimeDiff(long long curr_time, long long prev_time);
+  Eigen::MatrixXd ConstructQ(float_t dt);
+  Eigen::VectorXd Polar2Cart(const MeasurementPackage &measurement_pack);
 };
 
 #endif /* FusionEKF_H_ */
