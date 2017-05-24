@@ -77,7 +77,6 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 }
 
 /**
- * TODO: normalize theta after atan2
  * @param x_state
  * @return
  */
@@ -90,7 +89,7 @@ VectorXd Tools::Cart2Polar(const VectorXd &x_state) {
   float_t vy = x_state(3);
 
   float_t ro = sqrt(pow(px, 2) + pow(py, 2));
-  float_t theta = atan2(py, px);
+  float_t theta = atan2f(py, px);
 
   float_t threshold = 1e-4;
   float_t ro_dot = 0;
@@ -115,3 +114,12 @@ VectorXd Tools::NormalizeAngle(VectorXd &z_diff) {
   while(z_diff(1) < -M_PI) { z_diff(1) += TWO_PI; }
   return z_diff;
 }
+
+/**
+ * Alternative solution
+ */
+/*
+VectorXd Tools::NormalizeAngle(VectorXd &z_diff) {
+  return fmodf(z_diff, 2. * M_PI);
+}
+ */

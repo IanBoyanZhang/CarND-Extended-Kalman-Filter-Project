@@ -38,10 +38,10 @@ private:
   bool velo_is_initialized_;
   bool is_setup;
 
-//  float_t noise_ax = 9;
-  float_t noise_ay = 11;
+  float_t noise_ax = 9;
+  float_t noise_ay = 9;
 
-  float_t noise_ax = 16;
+//  float_t noise_ax = 16;
 //  float_t noise_ay = 16;
 
   // previous timestamp

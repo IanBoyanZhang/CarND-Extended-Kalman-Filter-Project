@@ -62,7 +62,7 @@ float_t FusionEKF::GetTimeDiff(long long curr_time, long long prev_time) {
 /**
  * Better estimation of ax and ay over time?
  * @param dt
- * @return MatrixXd* Q process noise
+ * @return MatrixXd * Q process noise
  */
 MatrixXd FusionEKF::ConstructQ(float_t dt) {
   float_t dt_2 = pow(dt, 2);
@@ -136,8 +136,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.P_ = MatrixXd(4, 4);
     ekf_.P_ << 1, 0, 0, 0,
               0, 1, 0, 0,
-              0, 0, 1000, 0,
-              0, 0, 0, 1000;
+              0, 0, 2000, 0,
+              0, 0, 0, 2000;
 
     is_setup = true;
     return;
@@ -187,10 +187,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     }
 
 //    ekf_.x_(2) = meas_cart[2];
-    ekf_.x_(3) = meas_cart[3];
+//    ekf_.x_(3) = meas_cart[3];
 
-    ekf_.x_(2) = 0;
-//    ekf_.x_(3) = 0;
+    ekf_.x_(2) = 1.1;
+    ekf_.x_(3) = 0;
     velo_is_initialized_ = true;
     return;
   }
@@ -242,6 +242,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     meas_cart = measurement_pack.raw_measurements_;
     ekf_.Update(meas_cart);
   }
+
+  // cout << "z = " << measurement_pack.raw_measurements_ << endl;
 
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;
