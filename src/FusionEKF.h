@@ -1,11 +1,11 @@
 #ifndef FusionEKF_H_
 #define FusionEKF_H_
-
-#include "measurement_package.h"
-#include "Eigen/Dense"
 #include <vector>
 #include <string>
 #include <fstream>
+#include <cmath>
+#include "measurement_package.h"
+#include "Eigen/Dense"
 #include "kalman_filter.h"
 #include "tools.h"
 
@@ -37,6 +37,12 @@ private:
   bool pos_is_initialized_;
   bool velo_is_initialized_;
   bool is_setup;
+
+//  float_t noise_ax = 9;
+  float_t noise_ay = 11;
+
+  float_t noise_ax = 16;
+//  float_t noise_ay = 16;
 
   // previous timestamp
   long long previous_timestamp_;

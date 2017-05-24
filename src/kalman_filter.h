@@ -1,6 +1,7 @@
 #ifndef KALMAN_FILTER_H_
 #define KALMAN_FILTER_H_
 #include "Eigen/Dense"
+#include "tools.h"
 
 class KalmanFilter {
 public:
@@ -11,10 +12,10 @@ public:
   // state covariance matrix
   Eigen::MatrixXd P_;
 
-  // state transistion matrix
+  // state transition matrix
   Eigen::MatrixXd F_;
 
-  // state transistion matrix transpose for reusing calc result
+  // state transition matrix transpose for reusing calc result
   Eigen::MatrixXd Ft;
 
   // process covariance matrix
@@ -25,6 +26,9 @@ public:
 
   // measurement covariance matrix
   Eigen::MatrixXd R_;
+
+  // measurement matrix for kalman gain
+  Eigen::MatrixXd H_k_;
 
   /**
    * Constructor
@@ -66,7 +70,6 @@ public:
    * @param z The measurement at k+1
    */
   void UpdateEKF(const Eigen::VectorXd &z);
-
 };
 
 #endif /* KALMAN_FILTER_H_ */

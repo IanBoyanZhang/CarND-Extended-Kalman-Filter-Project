@@ -1,6 +1,8 @@
 #ifndef TOOLS_H_
 #define TOOLS_H_
+#define _USE_MATH_DEFINES
 #include <vector>
+#include <cmath>
 #include "Eigen/Dense"
 
 using Eigen::MatrixXd;
@@ -29,6 +31,14 @@ public:
   */
   MatrixXd CalculateJacobian(const VectorXd& x_state);
 
+  /**
+   * Coordinate transformation
+   * @param x_state
+   * @return
+   */
+  VectorXd Cart2Polar(const VectorXd& x_state);
+
+  VectorXd NormalizeAngle(VectorXd &z_diff);
 };
 
 #endif /* TOOLS_H_ */

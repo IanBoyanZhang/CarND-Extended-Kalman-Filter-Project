@@ -1,6 +1,5 @@
 #include <iostream>
 #include "tools.h"
-#include <cmath>
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
@@ -13,7 +12,6 @@ Tools::~Tools() {}
 VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
                               const vector<VectorXd> &ground_truth) {
   /**
-  TODO:
     * Calculate the RMSE here.
   */
   VectorXd rmse(4);
@@ -76,4 +74,44 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
         -py/c1, px/c1, 0, 0,
         py*(vx*py - vy*px)/c3, px*(px*vy - py*vx)/c3, px/c2, py/c2;
   return Hj;
+}
+
+/**
+ * TODO: normalize theta after atan2
+ * @param x_state
+ * @return
+ */
+VectorXd Tools::Cart2Polar(const VectorXd &x_state) {
+  VectorXd H_x(3);
+
+  float_t px = x_state(0);
+  float_t py = x_state(1);
+  float_t vx = x_state(2);
+  float_t vy = x_state(3);
+
+  float_t ro = sqrt(pow(px, 2) + pow(py, 2));
+  float_t theta = atan2(py, px);
+
+  float_t threshold = 1e-4;
+  float_t ro_dot = 0;
+  if (fabs(ro) >= threshold) {
+    ro_dot = (px * vx + py * vy)/ro;
+  } else {
+    cout << "Cart2Polar() - Error - Division by Zero" << endl;
+  }
+
+  H_x << ro, theta, ro_dot;
+  return H_x;
+}
+
+/**
+ *
+ * @param theta_
+ * @return
+ */
+VectorXd Tools::NormalizeAngle(VectorXd &z_diff) {
+  float_t TWO_PI = 2. * M_PI;
+  while(z_diff(1) > M_PI) { z_diff(1) -= TWO_PI; }
+  while(z_diff(1) < -M_PI) { z_diff(1) += TWO_PI; }
+  return z_diff;
 }

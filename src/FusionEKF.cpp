@@ -1,7 +1,7 @@
+#include <iostream>
 #include "FusionEKF.h"
 #include "tools.h"
 #include "Eigen/Dense"
-#include <iostream>
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -34,13 +34,12 @@ FusionEKF::FusionEKF() {
         0, 0, 0.09;
 
   /**
-  TODO:
     * Finish initializing the FusionEKF.
     * Set the process and measurement noises
   */
 //  Idea: Going through data to calculate process and measurement noises?
-  H_laser_(0, 0) = 1;
-  H_laser_(1, 1) = 1;
+  H_laser_ << 1, 0, 0, 0,
+              0, 1, 0, 0;
 }
 
 /**
@@ -65,18 +64,15 @@ float_t FusionEKF::GetTimeDiff(long long curr_time, long long prev_time) {
  * @param dt
  * @return MatrixXd* Q process noise
  */
-MatrixXd ConstructQ(float_t dt) {
-  float_t noise_ax = 9;
-  float_t noise_ay = 9;
-
+MatrixXd FusionEKF::ConstructQ(float_t dt) {
   float_t dt_2 = pow(dt, 2);
   float_t dt_3 = pow(dt, 3);
   float_t dt_4 = pow(dt, 4);
 
   MatrixXd Q(4, 4);
   Q << dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
-       0, dt_4 * noise_ay, 0, dt_3/2*noise_ay,
-       dt_3/2*noise_ax, 0, dt_2*noise_ay, 0,
+       0, dt_4/4 * noise_ay, 0, dt_3/2*noise_ay,
+       dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
        0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
   return Q;
 }
@@ -86,7 +82,7 @@ MatrixXd ConstructQ(float_t dt) {
  * @param measurement_pack
  * @return
  */
-VectorXd Polar2Cart(const MeasurementPackage &measurement_pack) {
+VectorXd FusionEKF::Polar2Cart(const MeasurementPackage &measurement_pack) {
   float_t ro = measurement_pack.raw_measurements_[0];
   float_t theta = measurement_pack.raw_measurements_[1];
   float_t ro_dot = measurement_pack.raw_measurements_[2];
@@ -129,6 +125,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
+    ekf_.x_ << 0, 0, 0, 0;
 
     ekf_.F_ = MatrixXd(4, 4);
     ekf_.F_ << 1, 0, 1, 0,
@@ -157,6 +154,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       Convert radar from polar to cartesian coordinates and initialize state.
       */
       meas_cart = Polar2Cart(measurement_pack);
+      return;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
@@ -185,9 +183,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
       // w/o initial velocity
       meas_cart = measurement_pack.raw_measurements_;
+      return;
     }
-    ekf_.x_(2) = meas_cart[2];
+
+//    ekf_.x_(2) = meas_cart[2];
     ekf_.x_(3) = meas_cart[3];
+
+    ekf_.x_(2) = 0;
+//    ekf_.x_(3) = 0;
     velo_is_initialized_ = true;
     return;
   }
@@ -226,15 +229,19 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-    H_ = tools.CalculateJacobian(ekf_.x_);
-    R_ = R_radar_;
-  } else {
+    ekf_.H_ = tools.Cart2Polar(ekf_.x_);
+    ekf_.H_k_ = tools.CalculateJacobian(ekf_.x_);
+    ekf_.R_ = R_radar_;
+    meas_cart = measurement_pack.raw_measurements_;
+    ekf_.UpdateEKF(meas_cart);
+  } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
     // Laser updates
-    H_ = H_laser_;
-    R_ = R_laser_;
+    ekf_.H_ = H_laser_;
+    ekf_.H_k_ = H_laser_;
+    ekf_.R_ = R_laser_;
+    meas_cart = measurement_pack.raw_measurements_;
+    ekf_.Update(meas_cart);
   }
-
-  ekf_.Update(meas_cart);
 
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;
