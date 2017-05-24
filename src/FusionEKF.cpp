@@ -113,8 +113,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.P_ = MatrixXd(4, 4);
     ekf_.P_ << 1, 0, 0, 0,
               0, 1, 0, 0,
-              0, 0, 2000, 0,
-              0, 0, 0, 2000;
+              0, 0, 1000, 0,
+              0, 0, 0, 1000;
 
     is_setup = true;
     return;
@@ -136,7 +136,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       /**
       Initialize state.
       */
-      // w/o initial velocity
       meas_cart = measurement_pack.raw_measurements_;
     }
     ekf_.x_ << meas_cart[0], meas_cart[1], 0, 0;
@@ -167,9 +166,22 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+ if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
+    // Radar updates
+    ekf_.H_ = tools.Cart2Polar(ekf_.x_);
+    ekf_.H_k_ = tools.CalculateJacobian(ekf_.x_);
+    ekf_.R_ = R_radar_;
+  } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
+    // Laser updates
+    ekf_.H_ = H_laser_;
+    ekf_.H_k_ = H_laser_;
+    ekf_.R_ = R_laser_;
+  }
 
-  ekf_.Predict();
-
+  float_t threshold = 1e-3;
+  if (dt >= threshold) {
+    ekf_.Predict();
+  }
   /*****************************************************************************
    *  Update
    ****************************************************************************/
@@ -181,21 +193,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-    ekf_.H_ = tools.Cart2Polar(ekf_.x_);
-    ekf_.H_k_ = tools.CalculateJacobian(ekf_.x_);
-    ekf_.R_ = R_radar_;
     meas_cart = measurement_pack.raw_measurements_;
     ekf_.UpdateEKF(meas_cart);
   } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
     // Laser updates
-    ekf_.H_ = H_laser_;
-    ekf_.H_k_ = H_laser_;
-    ekf_.R_ = R_laser_;
     meas_cart = measurement_pack.raw_measurements_;
     ekf_.Update(meas_cart);
   }
-
-  // cout << "z = " << measurement_pack.raw_measurements_ << endl;
 
   // print the output
   cout << "x_ = " << ekf_.x_ << endl;
