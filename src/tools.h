@@ -3,6 +3,7 @@
 #define _USE_MATH_DEFINES
 #include <vector>
 #include <cmath>
+#include "measurement_package.h"
 #include "Eigen/Dense"
 
 using Eigen::MatrixXd;
@@ -37,6 +38,7 @@ public:
    * @return
    */
   VectorXd Cart2Polar(const VectorXd& x_state);
+  VectorXd Polar2Cart(const MeasurementPackage &measurement_pack);
 
   VectorXd NormalizeAngle(VectorXd &z_diff);
 };

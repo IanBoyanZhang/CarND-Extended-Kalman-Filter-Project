@@ -12,8 +12,7 @@ using std::vector;
  * Constructor.
  */
 FusionEKF::FusionEKF() {
-  pos_is_initialized_ = false;
-  velo_is_initialized_ = false;
+  is_initialized_ = false;
   is_setup = false;
 
   previous_timestamp_ = 0;
@@ -37,7 +36,6 @@ FusionEKF::FusionEKF() {
     * Finish initializing the FusionEKF.
     * Set the process and measurement noises
   */
-//  Idea: Going through data to calculate process and measurement noises?
   H_laser_ << 1, 0, 0, 0,
               0, 1, 0, 0;
 }
@@ -48,7 +46,6 @@ FusionEKF::FusionEKF() {
 FusionEKF::~FusionEKF() {}
 /**
  *
- * TODO: Google style guide type conversion?
  * long long or time_t?
  * Compute the time elapsed between the current and previous measurement
  * @param curr_time
@@ -75,26 +72,6 @@ MatrixXd FusionEKF::ConstructQ(float_t dt) {
        dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
        0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
   return Q;
-}
-
-/**
- *
- * @param measurement_pack
- * @return
- */
-VectorXd FusionEKF::Polar2Cart(const MeasurementPackage &measurement_pack) {
-  float_t ro = measurement_pack.raw_measurements_[0];
-  float_t theta = measurement_pack.raw_measurements_[1];
-  float_t ro_dot = measurement_pack.raw_measurements_[2];
-
-  float_t px = ro*cos(theta);
-  float_t py = ro*sin(theta);
-  float_t vx = ro_dot*cos(theta);
-  float_t vy = ro_dot*sin(theta);
-
-  VectorXd radar_cart_x(4);
-  radar_cart_x << px, py, vx, vy;
-  return radar_cart_x;
 }
 
 bool isRadar(const MeasurementPackage &measurement_pack) {
@@ -143,7 +120,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     return;
   }
 
-  if (!pos_is_initialized_) {
+  if (!is_initialized_) {
     /**
       * Initialize the state ekf_.x_ with the first measurement.
       * Create the covariance matrix.
@@ -153,8 +130,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
-      meas_cart = Polar2Cart(measurement_pack);
-      return;
+      meas_cart = tools.Polar2Cart(measurement_pack);
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
@@ -166,34 +142,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.x_ << meas_cart[0], meas_cart[1], 0, 0;
 
     // done initializing, no need to predict or update
-    pos_is_initialized_ = true;
+    is_initialized_ = true;
     return;
   }
 
-  if (!velo_is_initialized_) {
-    if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-      /**
-      Convert radar from polar to cartesian coordinates and initialize state.
-      */
-      meas_cart = Polar2Cart(measurement_pack);
-    }
-    else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-      /**
-      Initialize state.
-      */
-      // w/o initial velocity
-      meas_cart = measurement_pack.raw_measurements_;
-      return;
-    }
-
-//    ekf_.x_(2) = meas_cart[2];
-//    ekf_.x_(3) = meas_cart[3];
-
-    ekf_.x_(2) = 1.1;
-    ekf_.x_(3) = 0;
-    velo_is_initialized_ = true;
-    return;
-  }
 
  /*****************************************************************************
    *  Parameter preparation

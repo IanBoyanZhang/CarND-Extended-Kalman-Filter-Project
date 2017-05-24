@@ -34,8 +34,7 @@ public:
 
 private:
   // check whether the tracking toolbox was initialized or not (first measurement)
-  bool pos_is_initialized_;
-  bool velo_is_initialized_;
+  bool is_initialized_;
   bool is_setup;
 
   float_t noise_ax = 9;
@@ -59,7 +58,6 @@ private:
 
   float_t GetTimeDiff(long long curr_time, long long prev_time);
   Eigen::MatrixXd ConstructQ(float_t dt);
-  Eigen::VectorXd Polar2Cart(const MeasurementPackage &measurement_pack);
 
   bool isRadar(const MeasurementPackage &measurement_pack);
   bool isLaser(const MeasurementPackage &measurement_pack);

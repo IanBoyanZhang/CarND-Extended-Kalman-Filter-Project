@@ -105,6 +105,24 @@ VectorXd Tools::Cart2Polar(const VectorXd &x_state) {
 
 /**
  *
+ * @param measurement_pack
+ * @return
+ */
+VectorXd Tools::Polar2Cart(const MeasurementPackage &measurement_pack) {
+  float_t ro = measurement_pack.raw_measurements_[0];
+  float_t theta = measurement_pack.raw_measurements_[1];
+  float_t ro_dot = measurement_pack.raw_measurements_[2];
+
+  float_t px = ro*cos(theta);
+  float_t py = ro*sin(theta);
+
+  VectorXd radar_cart_x(4);
+  radar_cart_x << px, py, 0, 0;
+  return radar_cart_x;
+}
+
+/**
+ *
  * @param theta_
  * @return
  */
