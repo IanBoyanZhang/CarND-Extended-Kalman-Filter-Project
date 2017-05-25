@@ -99,6 +99,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    *  Initialization
    ****************************************************************************/
   VectorXd meas_cart;
+  // Cache sensorType
+  MeasurementPackage::SensorType sensorType = GetSensorType(measurement_pack);
 
   /**
    * TODO: Refactor this part into a function
@@ -133,7 +135,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       * Create the covariance matrix.
       * Remember: you'll need to convert radar from polar to cartesian coordinates.
     */
-    switch(GetSensorType(measurement_pack)) {
+    switch(sensorType) {
       case MeasurementPackage::RADAR:
         /**
             Convert radar from polar to cartesian coordinates and initialize state.
@@ -173,7 +175,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-  switch(GetSensorType(measurement_pack)) {
+  switch(sensorType) {
     case MeasurementPackage::RADAR:
       // Radar updates
       ekf_.H_ = tools.Cart2Polar(ekf_.x_);
@@ -206,7 +208,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Use the sensor type to perform the update step.
      * Update the state and covariance matrices.
    */
-  switch(GetSensorType(measurement_pack)) {
+  switch(sensorType) {
     case MeasurementPackage::RADAR:
       // Radar updates
       meas_cart = measurement_pack.raw_measurements_;
