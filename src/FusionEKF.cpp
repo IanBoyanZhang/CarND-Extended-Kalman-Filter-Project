@@ -133,17 +133,21 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       * Create the covariance matrix.
       * Remember: you'll need to convert radar from polar to cartesian coordinates.
     */
-    if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-      /**
-      Convert radar from polar to cartesian coordinates and initialize state.
-      */
-      meas_cart = tools.Polar2Cart(measurement_pack);
-    }
-    else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-      /**
-      Initialize state.
-      */
-      meas_cart = measurement_pack.raw_measurements_;
+    switch(GetSensorType(measurement_pack)) {
+      case MeasurementPackage::RADAR:
+        /**
+            Convert radar from polar to cartesian coordinates and initialize state.
+        */
+        meas_cart = tools.Polar2Cart(measurement_pack);
+        break;
+      case MeasurementPackage::LASER:
+        /**
+          Initialize state.
+          */
+        meas_cart = measurement_pack.raw_measurements_;
+        break;
+      default:
+        break;
     }
     ekf_.x_ << meas_cart[0], meas_cart[1], 0, 0;
 
