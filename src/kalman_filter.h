@@ -73,6 +73,9 @@ public:
    * @param z The measurement at k+1
    */
   void UpdateEKF(const Eigen::VectorXd &z);
+
+private:
+  Tools tools;
 };
 
 #endif /* KALMAN_FILTER_H_ */

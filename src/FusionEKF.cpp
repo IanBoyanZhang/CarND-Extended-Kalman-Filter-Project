@@ -105,7 +105,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   /**
    * TODO: Refactor this part into a function
    */
-  if (!is_setup) {
+  if (!is_initialized_) {
     // first measurement
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
@@ -120,16 +120,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.P_ = MatrixXd(4, 4);
     ekf_.P_ << 1, 0, 0, 0,
               0, 1, 0, 0,
-              0, 0, 3000, 0,
-              0, 0, 0, 3000;
+              0, 0, 1000, 0,
+              0, 0, 0, 1000;
 
     ekf_.I = MatrixXd::Identity(4, 4);
 
-    is_setup = true;
-    return;
-  }
-
-  if (!is_initialized_) {
     /**
       * Initialize the state ekf_.x_ with the first measurement.
       * Create the covariance matrix.
@@ -152,6 +147,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         break;
     }
     ekf_.x_ << meas_cart[0], meas_cart[1], 0, 0;
+    previous_timestamp_ = measurement_pack.timestamp_;
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
@@ -159,11 +155,15 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   }
 
 
- /*****************************************************************************
+/*  if (sensorType == MeasurementPackage::LASER) {
+    return;
+  }*/
+  /*****************************************************************************
    *  Parameter preparation
    ****************************************************************************/
   float_t dt = GetTimeDiff(measurement_pack.timestamp_, previous_timestamp_);
   previous_timestamp_ = measurement_pack.timestamp_;
+  cout << "dt" << dt << endl;
 
   /*****************************************************************************
    *  Prediction
@@ -180,6 +180,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       // Radar updates
       ekf_.H_ = tools.Cart2Polar(ekf_.x_);
       ekf_.H_k_ = tools.CalculateJacobian(ekf_.x_);
+      cout << "H" << ekf_.H_ << endl;
+      cout << "J" << ekf_.H_k_ << endl;
       ekf_.R_ = R_radar_;
       break;
     case MeasurementPackage::LASER:
@@ -196,7 +198,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   if (dt >= threshold) {
     ekf_.F_(0, 2) = dt;
     ekf_.F_(1, 3) = dt;
-    ekf_.Ft = ekf_.F_.transpose();
+    //ekf_.Ft = ekf_.F_.transpose();
     ekf_.Q_ = ConstructQ(dt);
     ekf_.Predict();
   }
@@ -211,13 +213,11 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   switch(sensorType) {
     case MeasurementPackage::RADAR:
       // Radar updates
-      meas_cart = measurement_pack.raw_measurements_;
-      ekf_.UpdateEKF(meas_cart);
+      ekf_.UpdateEKF(measurement_pack.raw_measurements_);
       break;
     case MeasurementPackage::LASER:
       // Laser updates
-      meas_cart = measurement_pack.raw_measurements_;
-      ekf_.Update(meas_cart);
+      ekf_.Update(measurement_pack.raw_measurements_);
       break;
     default:
       break;

@@ -23,7 +23,7 @@ void KalmanFilter::Predict() {
     * predict the state
   */
   x_ = F_ * x_;
-  P_ = F_ * P_ * Ft + Q_;
+  P_ = F_ * P_ * F_.transpose() + Q_;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
@@ -33,6 +33,8 @@ void KalmanFilter::Update(const VectorXd &z) {
 
   VectorXd z_pred = H_ * x_;
   VectorXd y = z - z_pred;
+
+  y = tools.NormalizeAngle(y);
 
   MatrixXd Ht = H_k_.transpose();
   MatrixXd S = H_k_ * P_ * Ht + R_;
@@ -52,11 +54,12 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   */
   VectorXd y = z - H_;
 
-  Tools tools;
   y = tools.NormalizeAngle(y);
 
   MatrixXd Ht = H_k_.transpose();
+  cout << "P" << P_ << endl;
   MatrixXd S = H_k_ * P_ * Ht + R_;
+//  cout << "R_" << H_k_ * P_ << endl;
   MatrixXd Si = S.inverse();
   MatrixXd PHt = P_ * Ht;
 
