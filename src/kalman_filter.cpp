@@ -23,29 +23,15 @@ void KalmanFilter::Predict() {
     * predict the state
   */
   x_ = F_ * x_;
-  P_ = F_ * P_ * F_.transpose() + Q_;
+  P_ = F_ * P_ * Ft + Q_;
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
   /**
     * update the state by using Kalman Filter equations
   */
-
-  VectorXd z_pred = H_ * x_;
-  VectorXd y = z - z_pred;
-
-  y = tools.NormalizeAngle(y);
-
-  MatrixXd Ht = H_k_.transpose();
-  MatrixXd S = H_k_ * P_ * Ht + R_;
-  MatrixXd Si = S.inverse();
-  MatrixXd PHt = P_ * Ht;
-
-  MatrixXd K = PHt * Si;
-
-  // New estimate
-  x_ = x_ + (K * y);
-  P_ = (I - K * H_k_) * P_;
+  VectorXd y = z - H_ * x_;
+  EstimateState(y);
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
@@ -55,17 +41,18 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   VectorXd y = z - H_;
 
   y = tools.NormalizeAngle(y);
+  EstimateState(y);
+}
 
-  MatrixXd Ht = H_k_.transpose();
-  cout << "P" << P_ << endl;
-  MatrixXd S = H_k_ * P_ * Ht + R_;
-//  cout << "R_" << H_k_ * P_ << endl;
+void KalmanFilter::EstimateState(const Eigen::VectorXd &z_diff) {
+//  MatrixXd Ht = H_k_.transpose();
+  MatrixXd S = H_k_ * P_ * H_k_t + R_;
   MatrixXd Si = S.inverse();
-  MatrixXd PHt = P_ * Ht;
+  MatrixXd PHt = P_ * H_k_t;
 
   MatrixXd K = PHt * Si;
 
   // New estimate
-  x_ = x_ + (K * y);
+  x_ = x_ + (K * z_diff);
   P_ = (I - K * H_k_) * P_;
 }

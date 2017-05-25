@@ -70,7 +70,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   }
 
 //  Computer the Jacobian Matrix
-  Hj << px/2, py/2, 0, 0,
+  Hj << px/c2, py/c2, 0, 0,
         -py/c1, px/c1, 0, 0,
         py*(vx*py - vy*px)/c3, px*(px*vy - py*vx)/c3, px/c2, py/c2;
   return Hj;
@@ -92,12 +92,12 @@ VectorXd Tools::Cart2Polar(const VectorXd &x_state) {
   float_t theta = atan2f(py, px);
 
   float_t threshold = 1e-4;
-  float_t ro_dot = threshold;
-  if (fabs(ro) >= threshold) {
-    ro_dot = (px * vx + py * vy)/ro;
-  } else {
+//  float_t ro_dot = threshold;
+  if (fabs(ro) <= threshold) {
+    ro = threshold;
     cout << "Cart2Polar() - Error - Division by Zero" << endl;
   }
+float_t ro_dot = (px * vx + py * vy)/ro;
 
   H_x << ro, theta, ro_dot;
   return H_x;

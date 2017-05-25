@@ -30,6 +30,9 @@ public:
   // measurement matrix for kalman gain
   Eigen::MatrixXd H_k_;
 
+  // Cache variable
+  Eigen::MatrixXd H_k_t;
+
   // Identity
   Eigen::MatrixXd I;
 
@@ -76,6 +79,13 @@ public:
 
 private:
   Tools tools;
+
+  /**
+   * Utility function for code reusing
+   * @param z_diff
+   */
+  void EstimateState(const Eigen::VectorXd &z_diff);
+
 };
 
 #endif /* KALMAN_FILTER_H_ */

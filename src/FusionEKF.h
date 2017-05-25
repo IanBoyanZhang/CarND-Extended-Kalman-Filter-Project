@@ -35,7 +35,6 @@ public:
 private:
   // check whether the tracking toolbox was initialized or not (first measurement)
   bool is_initialized_;
-  bool is_setup;
 
   float_t noise_ax_ = 9;
   float_t noise_ay_ = 9;
@@ -48,6 +47,7 @@ private:
   Eigen::MatrixXd R_laser_;
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
+  Eigen::MatrixXd H_laser_t;
 //  Eigen::MatrixXd Hj_;
 
   float_t GetTimeDiff(long long curr_time, long long prev_time);
