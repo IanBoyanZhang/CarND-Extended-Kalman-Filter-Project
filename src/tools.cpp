@@ -49,7 +49,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   /**
     * Calculate a Jacobian here.
   */
-  MatrixXd Hj(3, 4);
+  MatrixXd Hj = MatrixXd::Zero(3, 4);
 
   float_t threshold = 1e-4;
 //  Recover state parameters

@@ -30,6 +30,9 @@ public:
   // measurement matrix for kalman gain
   Eigen::MatrixXd H_k_;
 
+  // Identity
+  Eigen::MatrixXd I;
+
   /**
    * Constructor
    */

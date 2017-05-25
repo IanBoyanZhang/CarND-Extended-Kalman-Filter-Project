@@ -63,14 +63,27 @@ float_t FusionEKF::GetTimeDiff(long long curr_time, long long prev_time) {
  */
 MatrixXd FusionEKF::ConstructQ(float_t dt) {
   float_t dt_2 = pow(dt, 2);
-  float_t dt_3 = pow(dt, 3);
-  float_t dt_4 = pow(dt, 4);
+  float_t dt_3 = dt_2 * dt;
+  float_t dt_4 = dt_3 * dt;
 
   MatrixXd Q(4, 4);
-  Q << dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
-       0, dt_4/4 * noise_ay, 0, dt_3/2*noise_ay,
-       dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
-       0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
+  Q << dt_4/4*noise_ax_, 0, dt_3/2*noise_ax_, 0,
+       0, dt_4/4 * noise_ay_, 0, dt_3/2*noise_ay_,
+       dt_3/2*noise_ax_, 0, dt_2*noise_ax_, 0,
+       0, dt_3/2*noise_ay_, 0, dt_2*noise_ay_;
+
+  //Modify the Q matrix so that the time is integrated
+  Q(0,0) = (dt_4/4)*noise_ax_;
+  Q(0,2) = (dt_3/2)*noise_ax_;
+
+  Q(1,1) = (dt_4/4)*noise_ay_;
+  Q(1,3) = (dt_3/2)*noise_ay_;
+
+  Q(2,0) = (dt_3/2)*noise_ax_;
+  Q(2,2) = dt_2*noise_ax_;
+
+  Q(3,1) = (dt_3/2)*noise_ay_;
+  Q(3,3) = dt_2*noise_ay_;
   return Q;
 }
 
@@ -116,6 +129,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
               0, 0, 1000, 0,
               0, 0, 0, 1000;
 
+    ekf_.I = MatrixXd::Identity(4, 4);
+
     is_setup = true;
     return;
   }
@@ -152,10 +167,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   float_t dt = GetTimeDiff(measurement_pack.timestamp_, previous_timestamp_);
   previous_timestamp_ = measurement_pack.timestamp_;
 
-  ekf_.F_(0, 2) = dt;
-  ekf_.F_(1, 3) = dt;
-  ekf_.Q_ = ConstructQ(dt);
-
   /*****************************************************************************
    *  Prediction
    ****************************************************************************/
@@ -180,6 +191,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   float_t threshold = 1e-3;
   if (dt >= threshold) {
+    ekf_.F_(0, 2) = dt;
+    ekf_.F_(1, 3) = dt;
+    ekf_.Ft = ekf_.F_.transpose();
+    ekf_.Q_ = ConstructQ(dt);
     ekf_.Predict();
   }
   /*****************************************************************************
