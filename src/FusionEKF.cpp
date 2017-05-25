@@ -21,7 +21,7 @@ FusionEKF::FusionEKF() {
   R_laser_ = MatrixXd(2, 2);
   R_radar_ = MatrixXd(3, 3);
   H_laser_ = MatrixXd(2, 4);
-  Hj_ = MatrixXd(3, 4);
+//  Hj_ = MatrixXd(3, 4);
 
   //measurement covariance matrix - laser
   R_laser_ << 0.0225, 0,
@@ -66,11 +66,7 @@ MatrixXd FusionEKF::ConstructQ(float_t dt) {
   float_t dt_3 = dt_2 * dt;
   float_t dt_4 = dt_3 * dt;
 
-  MatrixXd Q(4, 4);
-  Q << dt_4/4*noise_ax_, 0, dt_3/2*noise_ax_, 0,
-       0, dt_4/4 * noise_ay_, 0, dt_3/2*noise_ay_,
-       dt_3/2*noise_ax_, 0, dt_2*noise_ax_, 0,
-       0, dt_3/2*noise_ay_, 0, dt_2*noise_ay_;
+  MatrixXd Q = MatrixXd::Zero(4, 4);
 
   //Modify the Q matrix so that the time is integrated
   Q(0,0) = (dt_4/4)*noise_ax_;
@@ -87,14 +83,10 @@ MatrixXd FusionEKF::ConstructQ(float_t dt) {
   return Q;
 }
 
-bool isRadar(const MeasurementPackage &measurement_pack) {
-  return measurement_pack.sensor_type_ == MeasurementPackage::RADAR;
+MeasurementPackage::SensorType FusionEKF::GetSensorType(
+        const MeasurementPackage &measurement_pack) {
+  return measurement_pack.sensor_type_;
 }
-
-bool isLaser(const MeasurementPackage &measurement_pack) {
-  return measurement_pack.sensor_type_ == MeasurementPackage::LASER;
-}
-
 /**
  * TODO: Refactor code to separate LIDAR and RADAR data
  * @param measurement_pack
@@ -126,8 +118,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.P_ = MatrixXd(4, 4);
     ekf_.P_ << 1, 0, 0, 0,
               0, 1, 0, 0,
-              0, 0, 1000, 0,
-              0, 0, 0, 1000;
+              0, 0, 3000, 0,
+              0, 0, 0, 3000;
 
     ekf_.I = MatrixXd::Identity(4, 4);
 
@@ -177,16 +169,21 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
- if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-    // Radar updates
-    ekf_.H_ = tools.Cart2Polar(ekf_.x_);
-    ekf_.H_k_ = tools.CalculateJacobian(ekf_.x_);
-    ekf_.R_ = R_radar_;
-  } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-    // Laser updates
-    ekf_.H_ = H_laser_;
-    ekf_.H_k_ = H_laser_;
-    ekf_.R_ = R_laser_;
+  switch(GetSensorType(measurement_pack)) {
+    case MeasurementPackage::RADAR:
+      // Radar updates
+      ekf_.H_ = tools.Cart2Polar(ekf_.x_);
+      ekf_.H_k_ = tools.CalculateJacobian(ekf_.x_);
+      ekf_.R_ = R_radar_;
+      break;
+    case MeasurementPackage::LASER:
+      // Laser updates
+      ekf_.H_ = H_laser_;
+      ekf_.H_k_ = H_laser_;
+      ekf_.R_ = R_laser_;
+      break;
+    default:
+      break;
   }
 
   float_t threshold = 1e-3;
@@ -205,15 +202,19 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Use the sensor type to perform the update step.
      * Update the state and covariance matrices.
    */
-
-  if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-    // Radar updates
-    meas_cart = measurement_pack.raw_measurements_;
-    ekf_.UpdateEKF(meas_cart);
-  } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-    // Laser updates
-    meas_cart = measurement_pack.raw_measurements_;
-    ekf_.Update(meas_cart);
+  switch(GetSensorType(measurement_pack)) {
+    case MeasurementPackage::RADAR:
+      // Radar updates
+      meas_cart = measurement_pack.raw_measurements_;
+      ekf_.UpdateEKF(meas_cart);
+      break;
+    case MeasurementPackage::LASER:
+      // Laser updates
+      meas_cart = measurement_pack.raw_measurements_;
+      ekf_.Update(meas_cart);
+      break;
+    default:
+      break;
   }
 
   // print the output

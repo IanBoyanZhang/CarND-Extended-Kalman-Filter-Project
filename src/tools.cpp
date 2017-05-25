@@ -92,7 +92,7 @@ VectorXd Tools::Cart2Polar(const VectorXd &x_state) {
   float_t theta = atan2f(py, px);
 
   float_t threshold = 1e-4;
-  float_t ro_dot = 0;
+  float_t ro_dot = threshold;
   if (fabs(ro) >= threshold) {
     ro_dot = (px * vx + py * vy)/ro;
   } else {
@@ -138,6 +138,7 @@ VectorXd Tools::NormalizeAngle(VectorXd &z_diff) {
  */
 /*
 VectorXd Tools::NormalizeAngle(VectorXd &z_diff) {
-  return fmodf(z_diff, 2. * M_PI);
+  z_diff(1) = fmod(z_diff(1), 2. * M_PI);
+  return z_diff;
 }
- */
+*/

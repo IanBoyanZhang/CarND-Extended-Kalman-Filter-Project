@@ -40,9 +40,6 @@ private:
   float_t noise_ax_ = 9;
   float_t noise_ay_ = 9;
 
-//  float_t noise_ax_ = 300;
-//  float_t noise_ay_ = 50;
-
   // previous timestamp
   long long previous_timestamp_;
 
@@ -51,16 +48,13 @@ private:
   Eigen::MatrixXd R_laser_;
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
-  Eigen::MatrixXd Hj_;
-
-  Eigen::MatrixXd R_;
-  Eigen::MatrixXd H_;
+//  Eigen::MatrixXd Hj_;
 
   float_t GetTimeDiff(long long curr_time, long long prev_time);
   Eigen::MatrixXd ConstructQ(float_t dt);
 
-  bool isRadar(const MeasurementPackage &measurement_pack);
-  bool isLaser(const MeasurementPackage &measurement_pack);
+  MeasurementPackage::SensorType GetSensorType(const MeasurementPackage
+                                               &measurement_pack);
 };
 
 #endif /* FusionEKF_H_ */
